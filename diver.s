@@ -9,9 +9,9 @@
 	.byte $00
 
 ; ppu hardware
-PPUCTRL = $2000
-PPUMASK = $2001
-PPUSTATUS = $2002
+PPUCTRL = $2000 ; (nmi,ppu mstr,spr size, bg tbl, spr tbl,PPUDATA inc,nametbl)
+PPUMASK = $2001 ; (B,G,R,spr,bg,leftSpr,leftBg,grey)
+PPUSTATUS = $2002 ; (vblank,spr0hit,sprOverflow,_,_,_,_)
 OAMADDR = $2003
 PPUSCROLL = $2005
 PPUADDR = $2006
@@ -72,7 +72,7 @@ paletteloop:
 	lda #$00 ; tile index
 	sta OAM, x
 	inx
-	lda #%00000001 ; vhP___pp
+	lda #%00000011 ; vhP___pp
 	sta OAM, x
 	inx
 	lda #$80 ; x pos
@@ -88,10 +88,6 @@ paletteloop:
 
 loop:
 	jmp loop
-
-palette:
-	.byte $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0D,$0E,$0F
-	.byte $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$1A,$1B,$1C,$1D,$1E,$1F
 
 NMI:
 ; Upload oam
@@ -139,11 +135,9 @@ IRQ:
 	.word IRQ
 
 .segment "CHARS"
-; tiles
-	.repeat $100
-	.byte $55,$56,$57,$58,$59,$5A,$65,$75,$85,$95,$A5,$55,$55,$55,$55,$55
-	.endrepeat
-; sprites
-	.repeat $1000
-	.byte $ff
-	.endrepeat
+.incbin "tiles.chr"
+.incbin "sprites.chr"
+
+.rodata
+palette:
+.incbin "palette.dat"
