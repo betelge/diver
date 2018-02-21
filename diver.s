@@ -64,6 +64,35 @@ paletteloop:
 	cpx #32
 	bne paletteloop
 
+; Populate nametables
+	lda #$20
+	sta PPUADDR
+	lda #$00
+	sta PPUADDR
+	ldx #$00
+hloop:
+	ldy #$00
+wloop0:
+	lda #$00
+	sta PPUDATA
+	lda #$01
+	sta PPUDATA
+	iny
+	cpy #$10
+	bne wloop0
+	ldy #$00
+wloop1:
+	lda #$10
+	sta PPUDATA
+	lda #$11
+	sta PPUDATA
+	iny
+	cpy #$10
+	bne wloop1
+	inx
+	cpx #$0f
+	bne hloop
+
 ; Set oam
 	ldx #0
 	lda #$80 ; y pos
@@ -110,19 +139,29 @@ inputloop:
 	lda buttons
 	lsr a
 	bcc noright
-	inc OAM + $03
+	pha
+	inc OAM + 3
+	lda OAM + 2
+	and #%10111111 ; Flip diver right
+	sta OAM + 2
+	pla
 noright:
 	lsr a
 	bcc noleft
-	dec OAM + $03
+	pha
+	dec OAM + 3
+	lda OAM + 2
+	ora #%01000000 ; Flip diver left
+	sta OAM + 2
+	pla
 noleft:
 	lsr a
 	bcc nodown
-	inc OAM + $00
+	inc OAM
 nodown:
 	lsr a
 	bcc noup
-	dec OAM + $00
+	dec OAM
 noup:
 	rti
 
