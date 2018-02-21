@@ -18,8 +18,15 @@ PPUADDR = $2006
 PPUDATA = $2007
 OAM_DMA = $4014
 
+;input hardware
+JOYPAD1 = $4016
+JOYPAD2 = $4017
+
 ; local defines
 OAM = $0200
+
+.zeropage
+buttons: .res 1
 
 .segment "STARTUP"
 
@@ -87,12 +94,40 @@ palette:
 	.byte $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$1A,$1B,$1C,$1D,$1E,$1F
 
 NMI:
-	inc OAM
 ; Upload oam
 	lda #0
 	sta OAMADDR ; Point oam address to start of oam memory
 	lda #>OAM
 	sta OAM_DMA ; Point the dma to top byte of the oam address in ram
+; Poll controller pad
+	lda #$01
+	sta JOYPAD1 ; Strobe controller
+	sta buttons
+	lda #$00
+	sta JOYPAD1
+inputloop:
+	lda JOYPAD1
+	lsr a ; bit 0 into carry
+	rol buttons ; carry into bit 0, bit 7 into carry
+	bcc inputloop
+; Move sprite
+	lda buttons
+	lsr a
+	bcc noright
+	inc OAM + $03
+noright:
+	lsr a
+	bcc noleft
+	dec OAM + $03
+noleft:
+	lsr a
+	bcc nodown
+	inc OAM + $00
+nodown:
+	lsr a
+	bcc noup
+	dec OAM + $00
+noup:
 	rti
 
 IRQ:
